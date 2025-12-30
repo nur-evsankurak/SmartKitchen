@@ -94,7 +94,7 @@ class Ingredient(Base):
     category = Column(String(100))
     unit = Column(String(50))
     calories_per_unit = Column(Float)
-    metadata = Column(JSONB, default={})
+    additional_data = Column(JSONB, default={})
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
