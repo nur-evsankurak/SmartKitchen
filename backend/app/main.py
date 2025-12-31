@@ -17,7 +17,7 @@ sys.path.insert(0, str(project_root))
 load_dotenv(dotenv_path=project_root / ".env")
 
 from app.database import init_db, engine
-from app.routers import auth
+from app.routers import auth, ingredients
 
 
 @asynccontextmanager
@@ -53,6 +53,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
+app.include_router(ingredients.router, prefix="/ingredients", tags=["Ingredients"])
 
 
 @app.get("/")

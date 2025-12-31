@@ -80,6 +80,7 @@ export default function Dashboard() {
             description="Manage your pantry inventory"
             icon="🥕"
             color="bg-yellow-100 text-yellow-600"
+            onClick={() => navigate('/ingredients')}
           />
           <DashboardCard
             title="Activity Log"
@@ -120,9 +121,12 @@ export default function Dashboard() {
   );
 }
 
-function DashboardCard({ title, description, icon, color }) {
+function DashboardCard({ title, description, icon, color, onClick }) {
   return (
-    <div className="card hover:shadow-lg transition-shadow cursor-pointer">
+    <div
+      onClick={onClick}
+      className="card hover:shadow-lg transition-shadow cursor-pointer"
+    >
       <div className={`w-12 h-12 rounded-lg ${color} flex items-center justify-center text-2xl mb-4`}>
         {icon}
       </div>

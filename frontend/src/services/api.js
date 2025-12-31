@@ -31,6 +31,34 @@ export const authAPI = {
   },
 };
 
+// Ingredients API
+export const ingredientsAPI = {
+  getAll: async () => {
+    const response = await api.get('/ingredients');
+    return response.data;
+  },
+
+  getById: async (id) => {
+    const response = await api.get(`/ingredients/${id}`);
+    return response.data;
+  },
+
+  create: async (ingredientData) => {
+    const response = await api.post('/ingredients', ingredientData);
+    return response.data;
+  },
+
+  update: async (id, ingredientData) => {
+    const response = await api.put(`/ingredients/${id}`, ingredientData);
+    return response.data;
+  },
+
+  delete: async (id) => {
+    const response = await api.delete(`/ingredients/${id}`);
+    return response.data;
+  },
+};
+
 // Response interceptor for error handling
 api.interceptors.response.use(
   (response) => response,
