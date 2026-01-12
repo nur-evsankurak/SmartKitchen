@@ -240,4 +240,4 @@ For questions or support, please open an issue in the GitHub repository.
 - [ ] Machine learning recipe recommendations
 - [ ] Voice assistant integration
 - [ ] Meal prep automation
-- [ ] Nutritional analysis and tracking
+- [ ] Nutritional analysis and tracking.
