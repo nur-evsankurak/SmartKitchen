@@ -56,24 +56,28 @@ export default function Dashboard() {
             description="Browse and manage your recipe collection"
             icon="📖"
             color="bg-blue-100 text-blue-600"
+            comingSoon
           />
           <DashboardCard
             title="Meal Plans"
             description="Plan your meals for the week"
             icon="📅"
             color="bg-green-100 text-green-600"
+            comingSoon
           />
           <DashboardCard
             title="Shopping Lists"
             description="Keep track of ingredients you need"
             icon="🛒"
             color="bg-purple-100 text-purple-600"
+            comingSoon
           />
           <DashboardCard
             title="Smart Appliances"
             description="Monitor and control your kitchen devices"
             icon="⚙️"
             color="bg-orange-100 text-orange-600"
+            comingSoon
           />
           <DashboardCard
             title="Ingredients"
@@ -87,6 +91,7 @@ export default function Dashboard() {
             description="View your recent kitchen activities"
             icon="📊"
             color="bg-pink-100 text-pink-600"
+            comingSoon
           />
         </div>
 
@@ -121,16 +126,27 @@ export default function Dashboard() {
   );
 }
 
-function DashboardCard({ title, description, icon, color, onClick }) {
+function DashboardCard({ title, description, icon, color, onClick, comingSoon }) {
+  const handleClick = () => {
+    if (comingSoon) {
+      alert(`${title} feature is coming soon! Stay tuned.`);
+    } else if (onClick) {
+      onClick();
+    }
+  };
+
   return (
     <div
-      onClick={onClick}
-      className="card hover:shadow-lg transition-shadow cursor-pointer"
+      onClick={handleClick}
+      className={`card hover:shadow-lg transition-shadow ${onClick || comingSoon ? 'cursor-pointer' : ''} ${comingSoon ? 'opacity-75' : ''}`}
     >
       <div className={`w-12 h-12 rounded-lg ${color} flex items-center justify-center text-2xl mb-4`}>
         {icon}
       </div>
-      <h3 className="text-lg font-semibold text-gray-800 mb-2">{title}</h3>
+      <h3 className="text-lg font-semibold text-gray-800 mb-2">
+        {title}
+        {comingSoon && <span className="ml-2 text-xs text-gray-500">(Coming Soon)</span>}
+      </h3>
       <p className="text-gray-600 text-sm">{description}</p>
     </div>
   );
