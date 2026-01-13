@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { authAPI } from '../services/api';
 
 export default function Login() {
@@ -7,6 +8,23 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // Check if user was redirected after successful magic link verification
+  useEffect(() => {
+    const successParam = searchParams.get('success');
+    const errorParam = searchParams.get('error');
+
+    if (successParam === 'true') {
+      // User successfully verified, redirect to dashboard
+      navigate('/dashboard');
+    } else if (errorParam) {
+      // Show error message
+      const message = searchParams.get('message') || 'Authentication failed';
+      setError(message);
+    }
+  }, [searchParams, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
