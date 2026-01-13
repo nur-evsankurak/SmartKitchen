@@ -260,3 +260,81 @@ async def delete_recipe(recipe_id: str, db: Session = Depends(get_db)):
     db.commit()
 
     return {"message": "Recipe deleted successfully", "id": recipe_id}
+
+
+@router.post("/recommend", status_code=status.HTTP_200_OK)
+async def recommend_recipes(
+    request: dict,
+    db: Session = Depends(get_db)
+):
+    """
+    Recommend recipes based on available ingredients.
+
+    Args:
+        request: {"available_ingredients": ["tomato", "egg", ...]}
+
+    Returns:
+        {
+            "recommended_recipes": [...],
+            "missing_ingredients": {...}
+        }
+    """
+    available_ingredients = request.get("available_ingredients", [])
+
+    # Normalize ingredient names (lowercase)
+    available_set = set(ing.lower().strip() for ing in available_ingredients)
+
+    # Get all recipes
+    recipes = db.query(Recipe).all()
+
+    recommended = []
+    missing_by_recipe = {}
+
+    for recipe in recipes:
+        if not recipe.ingredients:
+            continue
+
+        # Get recipe ingredient names
+        recipe_ingredients = []
+        if isinstance(recipe.ingredients, list):
+            for ing in recipe.ingredients:
+                if isinstance(ing, dict):
+                    name = ing.get('name', '').lower().strip()
+                    if name:
+                        recipe_ingredients.append(name)
+                elif isinstance(ing, str):
+                    recipe_ingredients.append(ing.lower().strip())
+
+        recipe_ing_set = set(recipe_ingredients)
+
+        # Calculate missing ingredients
+        missing = recipe_ing_set - available_set
+        match_percentage = (len(recipe_ing_set - missing) / len(recipe_ing_set) * 100) if recipe_ing_set else 0
+
+        recipe_data = {
+            "id": str(recipe.id),
+            "name": recipe.name,
+            "description": recipe.description,
+            "prep_time": recipe.prep_time,
+            "difficulty": recipe.difficulty.value if recipe.difficulty else None,
+            "required_ingredients": list(recipe_ing_set),
+            "missing_ingredients": list(missing),
+            "match_percentage": round(match_percentage, 1),
+            "can_make": len(missing) == 0
+        }
+
+        # Add to recommended if at least 50% match
+        if match_percentage >= 50:
+            recommended.append(recipe_data)
+            if missing:
+                missing_by_recipe[recipe.name] = list(missing)
+
+    # Sort by match percentage (highest first)
+    recommended.sort(key=lambda x: x["match_percentage"], reverse=True)
+
+    return {
+        "available_ingredients": list(available_set),
+        "total_recipes_checked": len(recipes),
+        "recommended_recipes": recommended,
+        "missing_ingredients": missing_by_recipe
+    }
