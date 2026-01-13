@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Response
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
+import os
 
 from app.database import get_db
 from app.schemas.auth import (
@@ -77,6 +79,66 @@ async def request_magic_link(
         email=request.email,
         expires_in_minutes=15
     )
+
+
+@router.get("/verify")
+async def verify_magic_link_get(
+    token: str,
+    response: Response,
+    db: Session = Depends(get_db)
+):
+    """
+    Verify a magic link token via GET request (for email links).
+    Redirects to frontend with session token.
+
+    Args:
+        token: Magic link token from query parameter
+        response: FastAPI Response object for setting cookies
+        db: Database session
+
+    Returns:
+        Redirect to frontend with success or error
+    """
+    # Get frontend URL from environment or use default
+    frontend_url = os.getenv("FRONTEND_URL", "https://plankton-app-zvzg5.ondigitalocean.app/smartkitchen-frontend")
+
+    # Verify the token
+    user = AuthService.verify_token(db=db, token=token)
+
+    if not user:
+        # Redirect to frontend with error
+        return RedirectResponse(
+            url=f"{frontend_url}?error=invalid_token&message=Invalid or expired token",
+            status_code=status.HTTP_302_FOUND
+        )
+
+    # Check if user is active
+    if not user.is_active:
+        return RedirectResponse(
+            url=f"{frontend_url}?error=inactive_account&message=Account is inactive",
+            status_code=status.HTTP_302_FOUND
+        )
+
+    # Generate session token
+    session_token = AuthService.generate_token(length=48)
+
+    # Set session cookie
+    response = RedirectResponse(
+        url=f"{frontend_url}?success=true",
+        status_code=status.HTTP_302_FOUND
+    )
+
+    response.set_cookie(
+        key="session_token",
+        value=session_token,
+        httponly=True,
+        max_age=86400,  # 24 hours
+        samesite="lax",
+        secure=True,  # HTTPS on production
+        domain=".ondigitalocean.app"
+    )
+
+    return response
 
 
 @router.post("/verify", response_model=VerifyTokenResponse, status_code=status.HTTP_200_OK)
