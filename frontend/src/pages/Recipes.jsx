@@ -7,6 +7,17 @@ export default function Recipes() {
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [editingRecipe, setEditingRecipe] = useState(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    prep_time: '',
+    cook_time: '',
+    servings: '',
+    difficulty: 'medium',
+    image_url: '',
+  });
 
   useEffect(() => {
     fetchRecipes();
@@ -32,6 +43,71 @@ export default function Recipes() {
       navigate('/');
     } catch (err) {
       console.error('Logout error:', err);
+    }
+  };
+
+  const handleAddRecipe = () => {
+    setEditingRecipe(null);
+    setFormData({
+      name: '',
+      description: '',
+      prep_time: '',
+      cook_time: '',
+      servings: '',
+      difficulty: 'medium',
+      image_url: '',
+    });
+    setShowModal(true);
+  };
+
+  const handleEditRecipe = (recipe) => {
+    setEditingRecipe(recipe);
+    setFormData({
+      name: recipe.name || '',
+      description: recipe.description || '',
+      prep_time: recipe.prep_time || '',
+      cook_time: recipe.cook_time || '',
+      servings: recipe.servings || '',
+      difficulty: recipe.difficulty || 'medium',
+      image_url: recipe.image_url || '',
+    });
+    setShowModal(true);
+  };
+
+  const handleDeleteRecipe = async (recipeId, recipeName) => {
+    if (!confirm(`Are you sure you want to delete "${recipeName}"?`)) {
+      return;
+    }
+
+    try {
+      await recipesAPI.delete(recipeId);
+      fetchRecipes(); // Reload recipes
+    } catch (err) {
+      alert(err.message || 'Failed to delete recipe');
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const data = {
+        ...formData,
+        prep_time: formData.prep_time ? parseInt(formData.prep_time) : null,
+        cook_time: formData.cook_time ? parseInt(formData.cook_time) : null,
+        servings: formData.servings ? parseInt(formData.servings) : null,
+      };
+
+      if (editingRecipe) {
+        await recipesAPI.update(editingRecipe.id, data);
+      } else {
+        await recipesAPI.create(data);
+      }
+
+      setShowModal(false);
+      fetchRecipes();
+    } catch (err) {
+      alert(err.message || 'Failed to save recipe');
     }
   };
 
@@ -73,13 +149,22 @@ export default function Recipes() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Your Recipe Collection
-          </h2>
-          <p className="text-gray-600">
-            Browse and manage your favorite recipes
-          </p>
+        <div className="mb-6 flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Your Recipe Collection
+            </h2>
+            <p className="text-gray-600">
+              Browse and manage your favorite recipes
+            </p>
+          </div>
+          <button
+            onClick={handleAddRecipe}
+            className="btn-primary flex items-center"
+          >
+            <span className="text-xl mr-2">+</span>
+            Add Recipe
+          </button>
         </div>
 
         {/* Error State */}
@@ -101,9 +186,12 @@ export default function Recipes() {
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
               No recipes yet
             </h3>
-            <p className="text-gray-600">
+            <p className="text-gray-600 mb-4">
               Start adding recipes to build your collection!
             </p>
+            <button onClick={handleAddRecipe} className="btn-primary">
+              Add Your First Recipe
+            </button>
           </div>
         ) : (
           /* Recipe Grid */
@@ -111,7 +199,7 @@ export default function Recipes() {
             {recipes.map((recipe) => (
               <div
                 key={recipe.id}
-                className="card hover:shadow-lg transition-shadow cursor-pointer"
+                className="card hover:shadow-lg transition-shadow relative"
               >
                 {/* Recipe Image */}
                 {recipe.image_url ? (
@@ -125,6 +213,24 @@ export default function Recipes() {
                     <span className="text-6xl">🍳</span>
                   </div>
                 )}
+
+                {/* Action Buttons */}
+                <div className="absolute top-2 right-2 flex space-x-2">
+                  <button
+                    onClick={() => handleEditRecipe(recipe)}
+                    className="bg-white hover:bg-gray-50 text-gray-700 rounded-full p-2 shadow-md"
+                    title="Edit"
+                  >
+                    ✏️
+                  </button>
+                  <button
+                    onClick={() => handleDeleteRecipe(recipe.id, recipe.name)}
+                    className="bg-white hover:bg-red-50 text-red-600 rounded-full p-2 shadow-md"
+                    title="Delete"
+                  >
+                    🗑️
+                  </button>
+                </div>
 
                 {/* Recipe Info */}
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
@@ -158,38 +264,151 @@ export default function Recipes() {
                     </span>
                   )}
                 </div>
-
-                {/* Ingredients Count */}
-                {recipe.ingredients && recipe.ingredients.length > 0 && (
-                  <div className="text-sm text-gray-600 mb-3">
-                    🥕 {recipe.ingredients.length} ingredient
-                    {recipe.ingredients.length !== 1 ? 's' : ''}
-                  </div>
-                )}
-
-                {/* Tags */}
-                {recipe.tags && recipe.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {recipe.tags.slice(0, 3).map((tag, index) => (
-                      <span
-                        key={index}
-                        className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs"
-                      >
-                        #{tag}
-                      </span>
-                    ))}
-                    {recipe.tags.length > 3 && (
-                      <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
-                        +{recipe.tags.length - 3} more
-                      </span>
-                    )}
-                  </div>
-                )}
               </div>
             ))}
           </div>
         )}
       </main>
+
+      {/* Modal for Add/Edit Recipe */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                {editingRecipe ? 'Edit Recipe' : 'Add New Recipe'}
+              </h2>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Recipe Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                    className="input-field"
+                    placeholder="e.g., Chocolate Chip Cookies"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Description
+                  </label>
+                  <textarea
+                    value={formData.description}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
+                    className="input-field"
+                    rows="3"
+                    placeholder="Brief description of the recipe..."
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Prep Time (minutes)
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.prep_time}
+                      onChange={(e) =>
+                        setFormData({ ...formData, prep_time: e.target.value })
+                      }
+                      className="input-field"
+                      placeholder="15"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Cook Time (minutes)
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.cook_time}
+                      onChange={(e) =>
+                        setFormData({ ...formData, cook_time: e.target.value })
+                      }
+                      className="input-field"
+                      placeholder="30"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Servings
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.servings}
+                      onChange={(e) =>
+                        setFormData({ ...formData, servings: e.target.value })
+                      }
+                      className="input-field"
+                      placeholder="4"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Difficulty
+                    </label>
+                    <select
+                      value={formData.difficulty}
+                      onChange={(e) =>
+                        setFormData({ ...formData, difficulty: e.target.value })
+                      }
+                      className="input-field"
+                    >
+                      <option value="easy">Easy</option>
+                      <option value="medium">Medium</option>
+                      <option value="hard">Hard</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Image URL
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.image_url}
+                    onChange={(e) =>
+                      setFormData({ ...formData, image_url: e.target.value })
+                    }
+                    className="input-field"
+                    placeholder="https://..."
+                  />
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowModal(false)}
+                    className="px-4 py-2 text-gray-700 hover:text-gray-900 font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn-primary">
+                    {editingRecipe ? 'Update Recipe' : 'Add Recipe'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

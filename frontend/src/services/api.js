@@ -70,6 +70,21 @@ export const recipesAPI = {
     const response = await api.get(`/recipes/${id}`);
     return response.data;
   },
+
+  create: async (recipeData) => {
+    const response = await api.post('/recipes', recipeData);
+    return response.data;
+  },
+
+  update: async (id, recipeData) => {
+    const response = await api.put(`/recipes/${id}`, recipeData);
+    return response.data;
+  },
+
+  delete: async (id) => {
+    const response = await api.delete(`/recipes/${id}`);
+    return response.data;
+  },
 };
 
 // Response interceptor for error handling
