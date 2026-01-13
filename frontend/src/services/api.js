@@ -59,6 +59,19 @@ export const ingredientsAPI = {
   },
 };
 
+// Recipes API
+export const recipesAPI = {
+  getAll: async () => {
+    const response = await api.get('/recipes');
+    return response.data;
+  },
+
+  getById: async (id) => {
+    const response = await api.get(`/recipes/${id}`);
+    return response.data;
+  },
+};
+
 // Response interceptor for error handling
 api.interceptors.response.use(
   (response) => response,

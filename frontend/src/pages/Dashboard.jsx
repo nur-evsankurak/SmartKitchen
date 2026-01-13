@@ -56,7 +56,7 @@ export default function Dashboard() {
             description="Browse and manage your recipe collection"
             icon="📖"
             color="bg-blue-100 text-blue-600"
-            comingSoon
+            onClick={() => navigate('/recipes')}
           />
           <DashboardCard
             title="Meal Plans"
