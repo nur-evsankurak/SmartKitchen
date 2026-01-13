@@ -6,7 +6,7 @@ import Ingredients from './pages/Ingredients';
 
 function App() {
   return (
-    <Router>
+    <Router basename="/smartkitchen-frontend">
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/auth/verify" element={<Verify />} />
