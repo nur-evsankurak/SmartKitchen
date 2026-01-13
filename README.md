@@ -241,3 +241,4 @@ For questions or support, please open an issue in the GitHub repository.
 - [ ] Voice assistant integration
 - [ ] Meal prep automation
 - [ ] Nutritional analysis and tracking.
+# SmartKitchen - Deployed on DigitalOcean
