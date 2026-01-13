@@ -1,18 +1,24 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { authAPI } from '../services/api';
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { logout } = useAuth(); // AuthContext'ten logout fonksiyonu
   const [loading, setLoading] = useState(false);
 
   const handleLogout = async () => {
     setLoading(true);
     try {
-      await authAPI.logout();
-      navigate('/');
+      await authAPI.logout(); // Backend'e logout isteği
+      logout(); // AuthContext'i temizle (localStorage'ı da temizler)
+      navigate('/'); // Login sayfasına yönlendir
     } catch (err) {
       console.error('Logout error:', err);
+      // Hata olsa bile logout yap
+      logout();
+      navigate('/');
     } finally {
       setLoading(false);
     }

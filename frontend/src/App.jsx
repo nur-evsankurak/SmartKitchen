@@ -1,4 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Verify from './pages/Verify';
 import Dashboard from './pages/Dashboard';
@@ -7,15 +9,41 @@ import Recipes from './pages/Recipes';
 
 function App() {
   return (
-    <Router basename="/smartkitchen-frontend">
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/auth/verify" element={<Verify />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/ingredients" element={<Ingredients />} />
-        <Route path="/recipes" element={<Recipes />} />
-      </Routes>
-    </Router>
+    <AuthProvider>
+      <Router basename="/smartkitchen-frontend">
+        <Routes>
+          {/* Public routes - herkes erişebilir */}
+          <Route path="/" element={<Login />} />
+          <Route path="/auth/verify" element={<Verify />} />
+
+          {/* Protected routes - sadece login olanlar */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/ingredients"
+            element={
+              <ProtectedRoute>
+                <Ingredients />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/recipes"
+            element={
+              <ProtectedRoute>
+                <Recipes />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 

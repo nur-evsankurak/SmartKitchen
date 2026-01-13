@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { authAPI } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Verify() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { login } = useAuth(); // AuthContext'ten login fonksiyonunu al
   const [status, setStatus] = useState('verifying'); // verifying, success, error
   const [error, setError] = useState('');
   const [user, setUser] = useState(null);
@@ -26,6 +28,9 @@ export default function Verify() {
       const response = await authAPI.verifyToken(token);
       setUser(response.user);
       setStatus('success');
+
+      // ✨ User bilgisini AuthContext'e kaydet (localStorage'a da kaydedilir)
+      login(response.user);
 
       // Redirect to dashboard after 2 seconds
       setTimeout(() => {

@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { recipesAPI, authAPI } from '../services/api';
 
 export default function Recipes() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -40,9 +42,12 @@ export default function Recipes() {
   const handleLogout = async () => {
     try {
       await authAPI.logout();
+      logout();
       navigate('/');
     } catch (err) {
       console.error('Logout error:', err);
+      logout();
+      navigate('/');
     }
   };
 
