@@ -10,6 +10,7 @@ export default function Verify() {
   const [status, setStatus] = useState('verifying'); // verifying, success, error
   const [error, setError] = useState('');
   const [user, setUser] = useState(null);
+  const [hasVerified, setHasVerified] = useState(false);
 
   useEffect(() => {
     const token = searchParams.get('token');
@@ -20,26 +21,39 @@ export default function Verify() {
       return;
     }
 
+    // Prevent multiple verification attempts
+    if (hasVerified) {
+      console.log('⚠️ Already verified, skipping...');
+      return;
+    }
+
+    setHasVerified(true);
     verifyMagicLink(token);
-  }, [searchParams]);
+  }, [searchParams, hasVerified]);
 
   const verifyMagicLink = async (token) => {
     try {
+      console.log('🔐 Verifying token...', token);
       const response = await authAPI.verifyToken(token);
+      console.log('✅ Token verified successfully:', response);
+
       setUser(response.user);
       setStatus('success');
 
       // ✨ User bilgisini AuthContext'e kaydet (localStorage'a da kaydedilir)
       login(response.user);
+      console.log('📝 User saved to context and localStorage');
 
-      // Redirect to dashboard after 2 seconds
+      // Redirect to dashboard immediately after successful authentication
+      // Small delay to show success message
       setTimeout(() => {
-        navigate('/dashboard');
-      }, 2000);
+        console.log('🚀 Navigating to dashboard...');
+        navigate('/dashboard', { replace: true });
+      }, 1000);
     } catch (err) {
       setStatus('error');
       setError(err.message || 'Failed to verify magic link');
-      console.error('Verification error:', err);
+      console.error('❌ Verification error:', err);
     }
   };
 

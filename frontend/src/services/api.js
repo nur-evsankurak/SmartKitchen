@@ -87,14 +87,43 @@ export const recipesAPI = {
   },
 };
 
+// Request interceptor for logging
+api.interceptors.request.use(
+  (config) => {
+    console.log(`🌐 API Request: ${config.method?.toUpperCase()} ${config.url}`, {
+      baseURL: config.baseURL,
+      withCredentials: config.withCredentials,
+      headers: config.headers
+    });
+    return config;
+  },
+  (error) => {
+    console.error('❌ API Request Error:', error);
+    return Promise.reject(error);
+  }
+);
+
 // Response interceptor for error handling
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log(`✅ API Response: ${response.config.method?.toUpperCase()} ${response.config.url}`, {
+      status: response.status,
+      data: response.data
+    });
+    return response;
+  },
   (error) => {
     const errorMessage =
       error.response?.data?.detail ||
       error.response?.data?.message ||
       'An unexpected error occurred';
+
+    console.error('❌ API Error:', {
+      url: error.config?.url,
+      status: error.response?.status,
+      message: errorMessage,
+      fullError: error
+    });
 
     return Promise.reject({
       message: errorMessage,

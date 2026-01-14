@@ -192,7 +192,8 @@ async def verify_magic_link(
         httponly=True,
         max_age=86400,  # 24 hours
         samesite="lax",
-        secure=False  # Set to True in production with HTTPS
+        secure=True,  # HTTPS required for production
+        domain=".ondigitalocean.app"
     )
 
     # Convert user to response schema
