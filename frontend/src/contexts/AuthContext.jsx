@@ -37,11 +37,19 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Login fonksiyonu - user bilgisini kaydet
-  const login = (userData) => {
+  const login = (userData, callback) => {
     console.log('🔐 AuthContext: Logging in user:', userData);
     setUser(userData);
     localStorage.setItem('smartkitchen_user', JSON.stringify(userData));
     console.log('✅ AuthContext: User saved to localStorage');
+
+    // Callback'i bir sonraki render cycle'da çağır (state update tamamlandıktan sonra)
+    if (callback) {
+      setTimeout(() => {
+        console.log('🔄 AuthContext: Executing callback after state update');
+        callback();
+      }, 0);
+    }
   };
 
   // Logout fonksiyonu - user bilgisini temizle

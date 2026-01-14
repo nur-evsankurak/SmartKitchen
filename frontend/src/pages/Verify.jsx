@@ -39,17 +39,30 @@ export default function Verify() {
 
       setUser(response.user);
       setStatus('success');
+      console.log('📝 User data received:', response.user);
 
-      // ✨ User bilgisini AuthContext'e kaydet (localStorage'a da kaydedilir)
-      login(response.user);
-      console.log('📝 User saved to context and localStorage');
+      // ✨ User bilgisini AuthContext'e kaydet ve sonra navigate et
+      login(response.user, () => {
+        // Callback - state update tamamlandıktan sonra çalışır
+        console.log('🚀 Starting navigation to dashboard...');
+        console.log('📍 Current URL:', window.location.href);
+        console.log('📍 Current pathname:', window.location.pathname);
+        console.log('📦 LocalStorage user:', localStorage.getItem('smartkitchen_user'));
 
-      // Redirect to dashboard immediately after successful authentication
-      // Small delay to show success message
-      setTimeout(() => {
-        console.log('🚀 Navigating to dashboard...');
-        navigate('/dashboard', { replace: true });
-      }, 1000);
+        // 1 saniye bekle (success mesajı için), sonra navigate et
+        setTimeout(() => {
+          console.log('➡️ Executing navigate to /dashboard');
+          navigate('/dashboard', { replace: true });
+          console.log('✅ Navigate function called');
+
+          // 500ms sonra kontrol et
+          setTimeout(() => {
+            console.log('🔍 Post-navigation check:');
+            console.log('   - Current URL:', window.location.href);
+            console.log('   - Current pathname:', window.location.pathname);
+          }, 500);
+        }, 1000);
+      });
     } catch (err) {
       setStatus('error');
       setError(err.message || 'Failed to verify magic link');
