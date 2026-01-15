@@ -3,11 +3,17 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from pydantic import BaseModel
 import uuid
+import os
+import json
+from openai import OpenAI
 
 from app.database import get_db
 from app.models import Recipe, RecipeDifficulty
 
 router = APIRouter()
+
+# Initialize OpenAI client
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
 # Request/Response schemas
@@ -338,3 +344,161 @@ async def recommend_recipes(
         "recommended_recipes": recommended,
         "missing_ingredients": missing_by_recipe
     }
+
+
+@router.post("/recommend-ai", status_code=status.HTTP_200_OK)
+async def recommend_recipes_with_ai(
+    request: dict,
+    db: Session = Depends(get_db)
+):
+    """
+    RAG-powered recipe recommendations using OpenAI.
+
+    Retrieval-Augmented Generation (RAG) approach:
+    1. Retrieve relevant recipes from PostgreSQL database
+    2. Augment LLM prompt with user's available ingredients + recipe data
+    3. Generate AI-powered personalized recommendations
+
+    Args:
+        request: {
+            "available_ingredients": ["tomato", "egg", ...],
+            "preferences": "vegetarian, quick meals",  # optional
+            "servings": 2  # optional
+        }
+
+    Returns:
+        {
+            "ai_recommendations": [...],
+            "reasoning": "AI explanation",
+            "all_recipes": [...]
+        }
+    """
+    available_ingredients = request.get("available_ingredients", [])
+    preferences = request.get("preferences", "")
+    servings = request.get("servings", 2)
+
+    if not available_ingredients:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Please provide available_ingredients"
+        )
+
+    # 1. RETRIEVAL: Get all recipes from database
+    recipes = db.query(Recipe).all()
+
+    if not recipes:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No recipes found in database"
+        )
+
+    # Format recipes for LLM context
+    recipes_context = []
+    for recipe in recipes:
+        recipe_ingredients = []
+        if isinstance(recipe.ingredients, list):
+            for ing in recipe.ingredients:
+                if isinstance(ing, dict):
+                    name = ing.get('name', '')
+                    amount = ing.get('amount', '')
+                    recipe_ingredients.append(f"{amount} {name}" if amount else name)
+                elif isinstance(ing, str):
+                    recipe_ingredients.append(ing)
+
+        recipes_context.append({
+            "id": str(recipe.id),
+            "name": recipe.name,
+            "description": recipe.description or "",
+            "difficulty": recipe.difficulty.value if recipe.difficulty else "medium",
+            "prep_time": recipe.prep_time or 0,
+            "cook_time": recipe.cook_time or 0,
+            "servings": recipe.servings or 1,
+            "ingredients": recipe_ingredients,
+            "tags": recipe.tags or []
+        })
+
+    # 2. AUGMENTATION: Build RAG prompt with retrieved data
+    system_prompt = """You are a professional chef and nutritionist assistant for SmartKitchen.
+Your task is to recommend recipes based on user's available ingredients.
+
+Guidelines:
+- Prioritize recipes that use most of the available ingredients
+- Consider cooking time and difficulty
+- Explain why each recipe is a good match
+- If ingredients are missing, suggest easy substitutions
+- Be concise but helpful"""
+
+    user_prompt = f"""User has these ingredients available:
+{', '.join(available_ingredients)}
+
+{f"User preferences: {preferences}" if preferences else ""}
+{f"Looking for recipes that serve {servings} people" if servings else ""}
+
+Here are all available recipes in the database:
+{json.dumps(recipes_context, indent=2)}
+
+Please recommend the TOP 3 most suitable recipes and explain why they're good matches.
+For each recommendation, specify:
+1. Recipe name and ID
+2. Why it's a good match
+3. What ingredients are missing (if any)
+4. Suggested substitutions (if applicable)
+5. Match score (0-100%)
+
+Format your response as JSON:
+{{
+    "recommendations": [
+        {{
+            "recipe_id": "uuid",
+            "recipe_name": "name",
+            "match_score": 85,
+            "reasoning": "explanation",
+            "missing_ingredients": ["ingredient1"],
+            "suggested_substitutions": {{"missing": "substitute"}}
+        }}
+    ],
+    "general_advice": "overall cooking advice"
+}}"""
+
+    try:
+        # 3. GENERATION: Call OpenAI API
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            temperature=0.7,
+            max_tokens=1500,
+            response_format={"type": "json_object"}
+        )
+
+        ai_response = json.loads(response.choices[0].message.content)
+
+        # Enrich AI recommendations with full recipe data
+        enriched_recommendations = []
+        for rec in ai_response.get("recommendations", []):
+            recipe_id = rec.get("recipe_id")
+            if recipe_id:
+                # Find full recipe data
+                full_recipe = next((r for r in recipes_context if r["id"] == recipe_id), None)
+                if full_recipe:
+                    enriched_recommendations.append({
+                        **rec,
+                        "full_recipe": full_recipe
+                    })
+
+        return {
+            "ai_recommendations": enriched_recommendations,
+            "general_advice": ai_response.get("general_advice", ""),
+            "available_ingredients": available_ingredients,
+            "total_recipes_analyzed": len(recipes),
+            "model_used": "gpt-4o-mini"
+        }
+
+    except Exception as e:
+        # Fallback to basic recommendation if OpenAI fails
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"AI recommendation failed: {str(e)}. Please check OPENAI_API_KEY configuration."
+        )
