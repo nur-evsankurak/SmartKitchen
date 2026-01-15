@@ -5,15 +5,26 @@ from pydantic import BaseModel
 import uuid
 import os
 import json
-from openai import OpenAI
 
 from app.database import get_db
 from app.models import Recipe, RecipeDifficulty
 
 router = APIRouter()
 
-# Initialize OpenAI client
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# Lazy load OpenAI client to avoid startup crash if API key is missing
+def get_openai_client():
+    """Get OpenAI client with API key validation."""
+    try:
+        from openai import OpenAI
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY environment variable not set")
+        return OpenAI(api_key=api_key)
+    except ImportError:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="OpenAI library not installed. Run: pip install openai"
+        )
 
 
 # Request/Response schemas
@@ -462,6 +473,7 @@ Format your response as JSON:
 
     try:
         # 3. GENERATION: Call OpenAI API
+        client = get_openai_client()
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
