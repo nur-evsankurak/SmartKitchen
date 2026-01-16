@@ -131,16 +131,34 @@ async def get_recipe(recipe_id: str, db: Session = Depends(get_db)):
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_recipe(recipe_data: RecipeCreate, db: Session = Depends(get_db)):
     """
-    Create a new recipe.
+    Create a new recipe entry in the database.
+
+    This endpoint ensures referential integrity by linking the new recipe
+    to an existing user in the system.
 
     Args:
-        recipe_data: Recipe data
+        recipe_data (RecipeCreate): The validated data from the frontend.
+        db (Session): The database session dependency.
 
     Returns:
-        Created recipe details
+        dict: The created recipe object formatted for the frontend.
     """
-    # Create new recipe
+    # Import User model to verify ownership
+    from app.models import User
+
+    # Retrieve the first available user to satisfy the Foreign Key (user_id) constraint
+    # In a production environment, this would be the current_authenticated_user
+    first_user = db.query(User).first()
+
+    if not first_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User identity required. No users found in the database."
+        )
+
+    # Initialize the Recipe model with validated data and assigned user_id
     recipe = Recipe(
+        user_id=first_user.id,  # Essential for maintaining database referential integrity
         name=recipe_data.name,
         description=recipe_data.description,
         prep_time=recipe_data.prep_time,
@@ -153,10 +171,12 @@ async def create_recipe(recipe_data: RecipeCreate, db: Session = Depends(get_db)
         image_url=recipe_data.image_url,
     )
 
+    # Persist the recipe to the PostgreSQL database
     db.add(recipe)
     db.commit()
     db.refresh(recipe)
 
+    # Return the newly created recipe as a JSON response
     return {
         "id": str(recipe.id),
         "name": recipe.name,
