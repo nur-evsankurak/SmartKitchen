@@ -43,12 +43,21 @@ app = FastAPI(
 )
 
 # CORS middleware configuration
+# Note: When allow_credentials=True, allow_origins cannot be "*"
+# Must specify exact origins for security
+allowed_origins = [
+    "http://localhost:5173",  # Vite dev server
+    "http://localhost:3000",   # Alternative dev port
+    "https://plankton-app-zvzg5.ondigitalocean.app",  # Production frontend
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify exact origins
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Include routers
