@@ -24,6 +24,7 @@ export default function Recipes() {
     servings: '',
     difficulty: 'medium',
     image_url: '',
+    ingredients: '', // Comma-separated ingredients
   });
 
   // AI Recommendations state
@@ -117,12 +118,23 @@ export default function Recipes() {
       servings: '',
       difficulty: 'medium',
       image_url: '',
+      ingredients: '',
     });
     setShowModal(true);
   };
 
   const handleEditRecipe = (recipe) => {
     setEditingRecipe(recipe);
+
+    // Convert ingredients array to comma-separated string
+    let ingredientsStr = '';
+    if (recipe.ingredients && Array.isArray(recipe.ingredients)) {
+      ingredientsStr = recipe.ingredients
+        .map(ing => typeof ing === 'string' ? ing : (ing.name || ''))
+        .filter(Boolean)
+        .join(', ');
+    }
+
     setFormData({
       name: recipe.name || '',
       description: recipe.description || '',
@@ -131,6 +143,7 @@ export default function Recipes() {
       servings: recipe.servings || '',
       difficulty: recipe.difficulty || 'medium',
       image_url: recipe.image_url || '',
+      ingredients: ingredientsStr,
     });
     setShowModal(true);
   };
@@ -152,11 +165,17 @@ export default function Recipes() {
     e.preventDefault();
 
     try {
+      // Convert comma-separated ingredients to array
+      const ingredientsArray = formData.ingredients
+        ? formData.ingredients.split(',').map(ing => ing.trim()).filter(Boolean)
+        : [];
+
       const data = {
         ...formData,
         prep_time: formData.prep_time ? parseInt(formData.prep_time) : null,
         cook_time: formData.cook_time ? parseInt(formData.cook_time) : null,
         servings: formData.servings ? parseInt(formData.servings) : null,
+        ingredients: ingredientsArray,
       };
 
       if (editingRecipe) {
@@ -319,9 +338,31 @@ export default function Recipes() {
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
                       {recipe.name}
                     </h3>
-                    <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                    <p className="text-sm text-gray-600 mb-2 line-clamp-2">
                       {recipe.description}
                     </p>
+
+                    {/* Ingredients */}
+                    {recipe.ingredients && recipe.ingredients.length > 0 && (
+                      <div className="mb-3 pb-3 border-b border-gray-200">
+                        <p className="text-xs font-medium text-gray-700 mb-1">Ingredients:</p>
+                        <div className="flex flex-wrap gap-1">
+                          {recipe.ingredients.slice(0, 5).map((ing, idx) => (
+                            <span
+                              key={idx}
+                              className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded"
+                            >
+                              {typeof ing === 'string' ? ing : ing.name}
+                            </span>
+                          ))}
+                          {recipe.ingredients.length > 5 && (
+                            <span className="text-xs text-gray-500">
+                              +{recipe.ingredients.length - 5} more
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
                     <div className="flex items-center justify-between text-sm text-gray-500 mb-3">
                       <div className="flex items-center space-x-4">
@@ -674,6 +715,24 @@ export default function Recipes() {
                       <option value="hard">Hard</option>
                     </select>
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Ingredients
+                  </label>
+                  <textarea
+                    value={formData.ingredients}
+                    onChange={(e) =>
+                      setFormData({ ...formData, ingredients: e.target.value })
+                    }
+                    className="input-field"
+                    rows="3"
+                    placeholder="Enter ingredients separated by commas (e.g., tomato, egg, onion, butter)"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Separate ingredients with commas
+                  </p>
                 </div>
 
                 <div>
