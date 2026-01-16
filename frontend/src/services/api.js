@@ -85,6 +85,16 @@ export const recipesAPI = {
     const response = await api.delete(`/recipes/${id}`);
     return response.data;
   },
+
+  // RAG-powered AI recommendations
+  getAIRecommendations: async (availableIngredients, preferences = '', servings = 2) => {
+    const response = await api.post('/recipes/recommend-ai', {
+      available_ingredients: availableIngredients,
+      preferences: preferences,
+      servings: servings
+    });
+    return response.data;
+  },
 };
 
 // Request interceptor for logging

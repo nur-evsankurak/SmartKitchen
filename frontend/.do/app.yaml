@@ -1,0 +1,15 @@
+name: smartkitchen-frontend
+static_sites:
+- name: web
+  github:
+    branch: main
+    deploy_on_push: true
+    repo: nur-evsankurak/SmartKitchen
+  source_dir: /frontend
+  output_dir: /dist
+  index_document: index.html
+  error_document: index.html
+  catchall_document: index.html
+  routes:
+  - path: /smartkitchen-frontend
+  build_command: npm run build

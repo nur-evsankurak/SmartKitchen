@@ -356,11 +356,13 @@ export default function Recipes() {
                     <input
                       type="number"
                       value={formData.servings}
+                      min="1"
                       onChange={(e) =>
-                        setFormData({ ...formData, servings: e.target.value })
+                        const value = Math.max(1, parseInt(e.target.value) || 1);
+                        setFormData({ ...formData, servings: value });
                       }
                       className="input-field"
-                      placeholder="4"
+                      placeholder="2"
                     />
                   </div>
 
