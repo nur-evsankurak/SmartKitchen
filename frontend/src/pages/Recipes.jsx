@@ -16,6 +16,7 @@ export default function Recipes() {
   const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState(null);
+  const [difficultyFilter, setDifficultyFilter] = useState('all'); // 'all', 'easy', 'medium', 'hard'
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -206,6 +207,11 @@ export default function Recipes() {
     }
   };
 
+  // Filter recipes by difficulty
+  const filteredRecipes = difficultyFilter === 'all'
+    ? recipes
+    : recipes.filter(recipe => recipe.difficulty === difficultyFilter);
+
   const getDifficultyColor = (difficulty) => {
     switch (difficulty) {
       case 'easy':
@@ -273,6 +279,54 @@ export default function Recipes() {
         {/* All Recipes Tab */}
         {activeTab === 'all' && (
           <>
+            {/* Difficulty Filter */}
+            <div className="mb-4 flex items-center space-x-2">
+              <span className="text-sm font-medium text-gray-700">Filter by difficulty:</span>
+              <button
+                onClick={() => setDifficultyFilter('all')}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  difficultyFilter === 'all'
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                All
+              </button>
+              <button
+                onClick={() => setDifficultyFilter('easy')}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  difficultyFilter === 'easy'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-green-100 text-green-800 hover:bg-green-200'
+                }`}
+              >
+                Easy
+              </button>
+              <button
+                onClick={() => setDifficultyFilter('medium')}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  difficultyFilter === 'medium'
+                    ? 'bg-yellow-600 text-white'
+                    : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
+                }`}
+              >
+                Medium
+              </button>
+              <button
+                onClick={() => setDifficultyFilter('hard')}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  difficultyFilter === 'hard'
+                    ? 'bg-red-600 text-white'
+                    : 'bg-red-100 text-red-800 hover:bg-red-200'
+                }`}
+              >
+                Hard
+              </button>
+              <span className="text-sm text-gray-500 ml-2">
+                ({filteredRecipes.length} recipe{filteredRecipes.length !== 1 ? 's' : ''})
+              </span>
+            </div>
+
             <div className="mb-6 flex justify-between items-center">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
@@ -314,9 +368,25 @@ export default function Recipes() {
                   Add Your First Recipe
                 </button>
               </div>
+            ) : filteredRecipes.length === 0 ? (
+              <div className="card text-center py-12">
+                <div className="text-6xl mb-4">🔍</div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  No recipes match this filter
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Try selecting a different difficulty level
+                </p>
+                <button
+                  onClick={() => setDifficultyFilter('all')}
+                  className="btn-primary"
+                >
+                  Show All Recipes
+                </button>
+              </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {recipes.map((recipe) => (
+                {filteredRecipes.map((recipe) => (
                   <div
                     key={recipe.id}
                     className="card hover:shadow-lg transition-shadow relative"
