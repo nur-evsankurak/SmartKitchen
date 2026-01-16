@@ -97,6 +97,19 @@ export const recipesAPI = {
   },
 };
 
+// Shopping Lists API
+export const shoppingListsAPI = {
+  addItems: async (items) => {
+    const response = await api.post('/shopping-lists/add-items', items);
+    return response.data;
+  },
+
+  getAll: async () => {
+    const response = await api.get('/shopping-lists');
+    return response.data;
+  },
+};
+
 // Request interceptor for logging
 api.interceptors.request.use(
   (config) => {

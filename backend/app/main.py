@@ -17,7 +17,7 @@ sys.path.insert(0, str(project_root))
 load_dotenv(dotenv_path=project_root / ".env")
 
 from app.database import init_db, engine
-from app.routers import auth, ingredients, recipes
+from app.routers import auth, ingredients, recipes, shopping_lists
 
 
 @asynccontextmanager
@@ -55,6 +55,7 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 app.include_router(ingredients.router, prefix="/ingredients", tags=["Ingredients"])
 app.include_router(recipes.router, prefix="/recipes", tags=["Recipes"])
+app.include_router(shopping_lists.router, prefix="/shopping-lists", tags=["Shopping Lists"])
 
 
 @app.get("/")

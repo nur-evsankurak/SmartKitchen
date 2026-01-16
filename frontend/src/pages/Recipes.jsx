@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { recipesAPI, authAPI, ingredientsAPI } from '../services/api';
+import { recipesAPI, authAPI, ingredientsAPI, shoppingListsAPI } from '../services/api';
 
 export default function Recipes() {
   const navigate = useNavigate();
@@ -94,6 +94,21 @@ export default function Recipes() {
         ? prev.filter((i) => i !== ingredientName)
         : [...prev, ingredientName]
     );
+  };
+
+  const handleAddToShoppingList = async (missingIngredients, recipeName) => {
+    if (!missingIngredients || missingIngredients.length === 0) {
+      alert('No missing ingredients to add!');
+      return;
+    }
+
+    try {
+      await shoppingListsAPI.addItems(missingIngredients);
+      alert(`✅ Added ${missingIngredients.length} ingredients to shopping list for "${recipeName}"!`);
+    } catch (err) {
+      console.error('Error adding to shopping list:', err);
+      alert('Failed to add to shopping list');
+    }
   };
 
   const handleLogout = async () => {
@@ -536,9 +551,16 @@ export default function Recipes() {
                           <p className="text-xs font-medium text-gray-700 mb-1">
                             Missing ingredients:
                           </p>
-                          <p className="text-sm text-red-600">
+                          <p className="text-sm text-red-600 mb-2">
                             {rec.missing_ingredients.join(', ')}
                           </p>
+                          {/* Add to Shopping List Button */}
+                          <button
+                            onClick={() => handleAddToShoppingList(rec.missing_ingredients, rec.recipe_name)}
+                            className="text-xs bg-primary-600 hover:bg-primary-700 text-white px-3 py-1.5 rounded-md transition-colors flex items-center gap-1"
+                          >
+                            🛒 Add to Shopping List
+                          </button>
                         </div>
                       ) : (
                         <div className="mb-3">
