@@ -8,6 +8,7 @@ import Ingredients from './pages/Ingredients';
 import Recipes from './pages/Recipes';
 import ShoppingList from './pages/ShoppingList';
 import { useEffect } from 'react';
+import IngredientDashboard from './components/IngredientDashboard';
 
 function LocationLogger() {
   const location = useLocation();
@@ -24,6 +25,15 @@ function LocationLogger() {
 
   return null;
 }
+function App() {
+  return (
+    <div className="App">
+      <IngredientDashboard />
+    </div>
+  );
+}
+
+export default App;
 
 function App() {
   return (
@@ -72,6 +82,7 @@ function App() {
       </Router>
     </AuthProvider>
   );
+
 }
 
 export default App;

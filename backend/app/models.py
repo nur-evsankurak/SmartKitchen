@@ -2,6 +2,7 @@ from sqlalchemy import Column, String, Integer, Float, Boolean, DateTime, Foreig
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship, declarative_base
 from sqlalchemy.sql import func
+from flask_sqlalchemy import SQLAlchemy
 import uuid
 import enum
 
@@ -195,3 +196,23 @@ class ApplianceUsageLog(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
 
     appliance = relationship("Appliance", back_populates="usage_logs")
+
+db = SQLAlchemy()
+
+# Association Table
+recipe_ingredients = db.Table('recipe_ingredients',
+    db.Column('recipe_id', db.Integer, db.ForeignKey('recipes.id'), primary_key=True),
+    db.Column('ingredient_id', db.Integer, db.ForeignKey('ingredients.id'), primary_key=True)
+)
+
+class Ingredient(db.Model):
+    __tablename__ = 'ingredients'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+
+class Recipe(db.Model):
+    __tablename__ = 'recipes'
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    # Relationship to ingredients
+    ingredients = db.relationship('Ingredient', secondary=recipe_ingredients, backref='recipes')

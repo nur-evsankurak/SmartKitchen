@@ -156,4 +156,54 @@ function DashboardCard({ title, description, icon, color, onClick, comingSoon })
       <p className="text-gray-600 text-sm">{description}</p>
     </div>
   );
+
+
+const IngredientDashboard = () => {
+    const [ingredientName, setIngredientName] = useState('');
+    const [recipeCount, setRecipeCount] = useState(0);
+
+    // Function to check the backend
+    const checkRecipes = async (value) => {
+        setIngredientName(value);
+
+        if (value.length > 1) {
+            try {
+                const response = await fetch(`http://localhost:5000/api/ingredient-stats?name=${value}`);
+                const data = await response.json();
+                setRecipeCount(data.count);
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            }
+        } else {
+            setRecipeCount(0);
+        }
+    };
+
+    return (
+        <div style={{ padding: '20px', fontFamily: 'Arial' }}>
+            <h2>SmartKitchen Dashboard</h2>
+
+            <div style={{ marginBottom: '10px' }}>
+                <label>Add Ingredient: </label>
+                <input
+                    type="text"
+                    placeholder="e.g. butter, tomato..."
+                    value={ingredientName}
+                    onChange={(e) => checkRecipes(e.target.value)}
+                    style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+                />
+            </div>
+
+            {ingredientName.length > 1 && (
+                <div style={{ color: recipeCount > 0 ? '#2ecc71' : '#e74c3c', fontWeight: 'bold' }}>
+                    {recipeCount > 0
+                        ? `✨ ${recipeCount} recipes have ${ingredientName}`
+                        : `No recipes found with ${ingredientName}`}
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default IngredientDashboard;
 }
