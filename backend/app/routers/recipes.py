@@ -143,54 +143,76 @@ async def create_recipe(recipe_data: RecipeCreate, db: Session = Depends(get_db)
     Returns:
         dict: The created recipe object formatted for the frontend.
     """
-    # Import User model to verify ownership
-    from app.models import User
+    try:
+        # Import User model to verify ownership
+        from app.models import User
 
-    # Retrieve the first available user to satisfy the Foreign Key (user_id) constraint
-    # In a production environment, this would be the current_authenticated_user
-    first_user = db.query(User).first()
+        print(f"📥 Creating recipe with data: {recipe_data.model_dump()}")
 
-    if not first_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User identity required. No users found in the database."
+        # Retrieve the first available user to satisfy the Foreign Key (user_id) constraint
+        # In a production environment, this would be the current_authenticated_user
+        first_user = db.query(User).first()
+
+        if not first_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="User identity required. No users found in the database."
+            )
+
+        print(f"👤 Using user_id: {first_user.id}")
+
+        # Initialize the Recipe model with validated data and assigned user_id
+        recipe = Recipe(
+            user_id=first_user.id,  # Essential for maintaining database referential integrity
+            name=recipe_data.name,
+            description=recipe_data.description,
+            prep_time=recipe_data.prep_time,
+            cook_time=recipe_data.cook_time,
+            servings=recipe_data.servings,
+            difficulty=RecipeDifficulty(recipe_data.difficulty) if recipe_data.difficulty else RecipeDifficulty.MEDIUM,
+            ingredients=recipe_data.ingredients,
+            instructions=recipe_data.instructions,
+            tags=recipe_data.tags,
+            image_url=recipe_data.image_url,
         )
 
-    # Initialize the Recipe model with validated data and assigned user_id
-    recipe = Recipe(
-        user_id=first_user.id,  # Essential for maintaining database referential integrity
-        name=recipe_data.name,
-        description=recipe_data.description,
-        prep_time=recipe_data.prep_time,
-        cook_time=recipe_data.cook_time,
-        servings=recipe_data.servings,
-        difficulty=RecipeDifficulty(recipe_data.difficulty) if recipe_data.difficulty else RecipeDifficulty.MEDIUM,
-        ingredients=recipe_data.ingredients,
-        instructions=recipe_data.instructions,
-        tags=recipe_data.tags,
-        image_url=recipe_data.image_url,
-    )
+        print(f"💾 Saving recipe to database...")
 
-    # Persist the recipe to the PostgreSQL database
-    db.add(recipe)
-    db.commit()
-    db.refresh(recipe)
+        # Persist the recipe to the PostgreSQL database
+        db.add(recipe)
+        db.commit()
+        db.refresh(recipe)
 
-    # Return the newly created recipe as a JSON response
-    return {
-        "id": str(recipe.id),
-        "name": recipe.name,
-        "description": recipe.description,
-        "prep_time": recipe.prep_time,
-        "cook_time": recipe.cook_time,
-        "servings": recipe.servings,
-        "difficulty": recipe.difficulty.value if recipe.difficulty else None,
-        "ingredients": recipe.ingredients,
-        "instructions": recipe.instructions,
-        "tags": recipe.tags,
-        "image_url": recipe.image_url,
-        "created_at": recipe.created_at.isoformat() if recipe.created_at else None,
-    }
+        print(f"✅ Recipe created with ID: {recipe.id}")
+
+        # Return the newly created recipe as a JSON response
+        return {
+            "id": str(recipe.id),
+            "name": recipe.name,
+            "description": recipe.description,
+            "prep_time": recipe.prep_time,
+            "cook_time": recipe.cook_time,
+            "servings": recipe.servings,
+            "difficulty": recipe.difficulty.value if recipe.difficulty else None,
+            "ingredients": recipe.ingredients,
+            "instructions": recipe.instructions,
+            "tags": recipe.tags,
+            "image_url": recipe.image_url,
+            "created_at": recipe.created_at.isoformat() if recipe.created_at else None,
+        }
+
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
+    except Exception as e:
+        print(f"❌ Error creating recipe: {type(e).__name__}: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create recipe: {str(e)}"
+        )
 
 
 @router.put("/{recipe_id}", status_code=status.HTTP_200_OK)
