@@ -6,6 +6,7 @@ import Verify from './pages/Verify';
 import Dashboard from './pages/Dashboard';
 import Ingredients from './pages/Ingredients';
 import Recipes from './pages/Recipes';
+import ShoppingList from './pages/ShoppingList';
 import { useEffect } from 'react';
 
 function LocationLogger() {
@@ -56,6 +57,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Recipes />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/shopping-list"
+            element={
+              <ProtectedRoute>
+                <ShoppingList />
               </ProtectedRoute>
             }
           />

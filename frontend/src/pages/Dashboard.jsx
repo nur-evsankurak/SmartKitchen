@@ -76,7 +76,7 @@ export default function Dashboard() {
             description="Keep track of ingredients you need"
             icon="🛒"
             color="bg-purple-100 text-purple-600"
-            comingSoon
+            onClick={() => navigate('/shopping-list')}
           />
           <DashboardCard
             title="Smart Appliances"
