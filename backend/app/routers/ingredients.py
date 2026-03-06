@@ -22,6 +22,35 @@ async def get_ingredients(db: Session = Depends(get_db)):
     return ingredients
 
 
+@router.get("/analytics", status_code=200)
+async def get_ingredient_analytics(db: Session = Depends(get_db)):
+    """
+    Get ingredient usage counts across all recipes.
+    Returns each ingredient name and how many recipes use it.
+    """
+    from app.models import Recipe
+
+    recipes = db.query(Recipe).all()
+
+    usage: dict = {}
+    for recipe in recipes:
+        if not recipe.ingredients:
+            continue
+        for ing in recipe.ingredients:
+            if isinstance(ing, dict):
+                name = ing.get("name", "").strip()
+            elif isinstance(ing, str):
+                name = ing.strip()
+            else:
+                continue
+            if name:
+                usage[name] = usage.get(name, 0) + 1
+
+    result = [{"ingredient": name, "recipe_count": count} for name, count in usage.items()]
+    result.sort(key=lambda x: x["recipe_count"], reverse=True)
+    return result
+
+
 @router.get("/{ingredient_id}", response_model=IngredientResponse)
 async def get_ingredient(ingredient_id: str, db: Session = Depends(get_db)):
     """

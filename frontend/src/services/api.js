@@ -57,6 +57,11 @@ export const ingredientsAPI = {
     const response = await api.delete(`/ingredients/${id}`);
     return response.data;
   },
+
+  getAnalytics: async () => {
+    const response = await api.get('/ingredients/analytics');
+    return response.data;
+  },
 };
 
 // Recipes API

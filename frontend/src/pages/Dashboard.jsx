@@ -89,9 +89,16 @@ export default function Dashboard() {
             onClick={() => navigate('/ingredients')}
           />
           <DashboardCard
+            title="Ingredient Analytics"
+            description="Visualize ingredient usage across your recipes"
+            icon="📊"
+            color="bg-teal-100 text-teal-600"
+            onClick={() => navigate('/ingredient-analytics')}
+          />
+          <DashboardCard
             title="Activity Log"
             description="View your recent kitchen activities"
-            icon="📊"
+            icon="📋"
             color="bg-pink-100 text-pink-600"
             comingSoon
           />

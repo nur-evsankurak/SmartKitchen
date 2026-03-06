@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Ingredients from './pages/Ingredients';
 import Recipes from './pages/Recipes';
 import ShoppingList from './pages/ShoppingList';
+import IngredientAnalytics from './pages/IngredientAnalytics';
 import { useEffect } from 'react';
 
 function LocationLogger() {
@@ -66,6 +67,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <ShoppingList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/ingredient-analytics"
+              element={
+                <ProtectedRoute>
+                  <IngredientAnalytics />
                 </ProtectedRoute>
               }
             />
