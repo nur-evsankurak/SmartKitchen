@@ -8,7 +8,6 @@ import Ingredients from './pages/Ingredients';
 import Recipes from './pages/Recipes';
 import ShoppingList from './pages/ShoppingList';
 import { useEffect } from 'react';
-import IngredientDashboard from './components/IngredientDashboard';
 
 function LocationLogger() {
   const location = useLocation();
@@ -32,8 +31,6 @@ function App() {
       <Router basename="/smartkitchen-frontend">
         <LocationLogger />
         <div className="App">
-          {/* RAG/Dashboard bileşenini buraya ekledim, istersen Routes içine de alabilirsin */}
-          <IngredientDashboard />
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<Login />} />
