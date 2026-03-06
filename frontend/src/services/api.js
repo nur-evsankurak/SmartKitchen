@@ -108,6 +108,16 @@ export const shoppingListsAPI = {
     const response = await api.get('/shopping-lists');
     return response.data;
   },
+
+  update: async (listId, updateData) => {
+    const response = await api.put(`/shopping-lists/${listId}`, updateData);
+    return response.data;
+  },
+
+  deleteItem: async (listId, itemIndex) => {
+    const response = await api.delete(`/shopping-lists/${listId}/items/${itemIndex}`);
+    return response.data;
+  },
 };
 
 // Request interceptor for logging
