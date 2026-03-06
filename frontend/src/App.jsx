@@ -25,64 +25,58 @@ function LocationLogger() {
 
   return null;
 }
-function App() {
-  return (
-    <div className="App">
-      <IngredientDashboard />
-    </div>
-  );
-}
-
-export default App;
 
 function App() {
   return (
     <AuthProvider>
       <Router basename="/smartkitchen-frontend">
         <LocationLogger />
-        <Routes>
-          {/* Public routes - herkes erişebilir */}
-          <Route path="/" element={<Login />} />
-          <Route path="/auth/verify" element={<Verify />} />
+        <div className="App">
+          {/* RAG/Dashboard bileşenini buraya ekledim, istersen Routes içine de alabilirsin */}
+          <IngredientDashboard />
+          <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<Login />} />
+            <Route path="/auth/verify" element={<Verify />} />
 
-          {/* Protected routes - sadece login olanlar */}
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/ingredients"
-            element={
-              <ProtectedRoute>
-                <Ingredients />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/recipes"
-            element={
-              <ProtectedRoute>
-                <Recipes />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/shopping-list"
-            element={
-              <ProtectedRoute>
-                <ShoppingList />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
+            {/* Protected routes */}
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/ingredients"
+              element={
+                <ProtectedRoute>
+                  <Ingredients />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/recipes"
+              element={
+                <ProtectedRoute>
+                  <Recipes />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/shopping-list"
+              element={
+                <ProtectedRoute>
+                  <ShoppingList />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </div>
       </Router>
     </AuthProvider>
   );
-
 }
 
 export default App;
